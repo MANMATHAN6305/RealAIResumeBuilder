@@ -1,4 +1,6 @@
 import { Resume } from '../types/resume';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export function exportToText(resume: Resume): string {
   let text = '';
@@ -109,18 +111,79 @@ export function downloadTextFile(content: string, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function exportToPDF(resume: Resume, templateStyle: string): void {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
+export async function exportToPDF(resume: Resume, templateStyle: string): Promise<void> {
+  // Find the resume preview element
+  const resumeElement = document.getElementById('resume-preview');
+  if (!resumeElement) {
+    console.error('Resume preview element not found');
+    alert('Please preview your resume first before exporting to PDF.');
+    return;
+  }
 
-  const html = generatePrintableHTML(resume, templateStyle);
-  printWindow.document.write(html);
-  printWindow.document.close();
+  try {
+    // Show loading indicator
+    const originalOpacity = resumeElement.style.opacity;
+    resumeElement.style.opacity = '0.5';
 
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
+    // Capture the element as canvas with high quality
+    const canvas = await html2canvas(resumeElement, {
+      scale: 2, // Higher quality
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: resumeElement.scrollWidth,
+      height: resumeElement.scrollHeight,
+    });
+
+    // Restore opacity
+    resumeElement.style.opacity = originalOpacity;
+
+    // A4 dimensions in mm: 210mm × 297mm
+    const a4Width = 210;
+    const a4Height = 297;
+    
+    // Calculate dimensions maintaining aspect ratio
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const imgAspectRatio = imgWidth / imgHeight;
+    const a4AspectRatio = a4Width / a4Height;
+
+    let pdfWidth = a4Width;
+    let pdfHeight = a4Height;
+
+    // If content is wider than A4, scale to fit width
+    if (imgAspectRatio > a4AspectRatio) {
+      pdfHeight = a4Width / imgAspectRatio;
+    } else {
+      pdfWidth = a4Height * imgAspectRatio;
+    }
+
+    // Create PDF with A4 size
+    const pdf = new jsPDF({
+      orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    // Convert canvas to image data
+    const imgData = canvas.toDataURL('image/png', 1.0);
+
+    // Add image to PDF, centered
+    const xOffset = (a4Width - pdfWidth) / 2;
+    const yOffset = (a4Height - pdfHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', xOffset, yOffset, pdfWidth, pdfHeight, undefined, 'FAST');
+
+    // Generate filename
+    const filename = `${resume.personalInfo.fullName.replace(/\s+/g, '_') || 'resume'}.pdf`;
+
+    // Save the PDF
+    pdf.save(filename);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Failed to generate PDF. Please try again.');
+    resumeElement.style.opacity = originalOpacity;
+  }
 }
 
 function generatePrintableHTML(resume: Resume, templateStyle: string): string {

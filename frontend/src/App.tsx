@@ -1,15 +1,24 @@
-import { useState } from 'react';
-import { FileText, Download, Sparkles, Eye, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { FileText, Download, Sparkles, Eye, ArrowRight, CheckCircle2, Save, LogOut } from 'lucide-react';
 import ResumeForm from './components/ResumeForm';
 import ResumePreview from './components/ResumePreview';
 import AISuggestions from './components/AISuggestions';
+import Login from './components/Login';
+import SignUp from './components/SignUp';
 import { Resume, PersonalInfo, Skills } from './types/resume';
 import { exportToText, exportToPDF, downloadTextFile } from './utils/exportResume';
+import { loadResumeForUser, saveResumeForUser } from './utils/resumeStorage';
+import { signOut } from './utils/auth';
 
 function App() {
-  const [view, setView] = useState<'home' | 'builder'>('home');
+  const [view, setView] = useState<'home' | 'login' | 'signup' | 'builder'>('home');
   const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'suggestions'>('edit');
   const [templateStyle, setTemplateStyle] = useState<'professional' | 'modern' | 'minimal'>('professional');
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [resume, setResume] = useState<Resume>({
     title: 'My Resume',
@@ -36,8 +45,99 @@ function App() {
     setResume({ ...resume, templateStyle: style });
   };
 
-  const handleExportPDF = () => {
-    exportToPDF(resume, templateStyle);
+  const handleLoginSuccess = async (email: string, id: string) => {
+    setUserEmail(email);
+    setUserId(id);
+    setView('builder');
+
+    // Try to load existing resume for this user
+    const existing = await loadResumeForUser(id);
+    if (existing) {
+      setResume(existing);
+      setTemplateStyle(existing.templateStyle);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    setUserId(null);
+    setUserEmail(null);
+    setView('home');
+    setResume({
+      title: 'My Resume',
+      templateStyle: 'professional',
+      targetRole: '',
+      personalInfo: {
+        fullName: '',
+        email: '',
+        phone: '',
+        location: '',
+        linkedin: '',
+        website: ''
+      } as PersonalInfo,
+      professionalSummary: '',
+      workExperience: [],
+      education: [],
+      skills: {} as Skills,
+      certifications: [],
+      projects: []
+    });
+  };
+
+  // Auto-save functionality with debouncing
+  useEffect(() => {
+    if (!userId) return;
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (2 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        setIsSaving(true);
+        await saveResumeForUser(userId, { ...resume, templateStyle });
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('Auto-save failed:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000);
+
+    // Cleanup function
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [resume, templateStyle, userId]);
+
+  const handleSave = async () => {
+    if (!userId) {
+      alert('Please log in before saving your resume.');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await saveResumeForUser(userId, { ...resume, templateStyle });
+      setLastSaved(new Date());
+      alert('Resume saved successfully.');
+    } catch (e) {
+      alert('Failed to save resume. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    // Switch to preview tab to ensure the resume preview element is rendered
+    setActiveTab('preview');
+    // Wait a bit for the DOM to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await exportToPDF(resume, templateStyle);
   };
 
   const handleExportText = () => {
@@ -47,7 +147,26 @@ function App() {
   };
 
   if (view === 'home') {
-    return <HomeScreen onGetStarted={() => setView('builder')} />;
+    return <HomeScreen onGetStarted={() => setView('login')} />;
+  }
+
+  if (view === 'login') {
+    return (
+      <Login
+        onLogin={handleLoginSuccess}
+        onSignUpClick={() => setView('signup')}
+        onBack={() => setView('home')}
+      />
+    );
+  }
+
+  if (view === 'signup') {
+    return (
+      <SignUp
+        onSignUp={handleLoginSuccess}
+        onBack={() => setView('login')}
+      />
+    );
   }
 
   return (
@@ -68,7 +187,36 @@ function App() {
                 <p className="text-sm text-gray-600">Create ATS-friendly, professional resumes in minutes</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              {userId && (
+                <>
+                  <div className="text-sm text-gray-600 hidden sm:block">
+                    {userEmail}
+                  </div>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="btn-3d flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                    title="Manual save"
+                  >
+                    <Save size={18} />
+                    {isSaving ? 'Saving…' : 'Save'}
+                  </button>
+                  {lastSaved && (
+                    <span className="text-xs text-gray-500 hidden sm:block">
+                      Saved {lastSaved.toLocaleTimeString()}
+                    </span>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="btn-3d flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                    title="Sign out"
+                  >
+                    <LogOut size={18} />
+                    Sign Out
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleExportText}
                 className="btn-3d flex items-center gap-2 bg-gradient-to-r from-slate-700 to-slate-900"
@@ -152,7 +300,7 @@ function App() {
           )}
 
           {activeTab === 'preview' && (
-            <div className="glass-card overflow-hidden shadow-[0_18px_45px_rgba(15,23,42,0.18)]">
+            <div className="overflow-hidden">
               <ResumePreview resume={resume} templateStyle={templateStyle} />
             </div>
           )}

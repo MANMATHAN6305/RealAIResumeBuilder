@@ -14,16 +14,34 @@ export default function ResumePreview({ resume, templateStyle }: ResumePreviewPr
 
   const Template = templates[templateStyle];
 
+  // A4 dimensions: 210mm × 297mm (8.27" × 11.69")
+  // Standard margins: 1 inch (25.4mm) on all sides
+  // Content area: 160mm × 247mm (6.27" × 9.69")
+  const a4Width = '210mm';
+  const a4Height = '297mm';
+  const margin = '25.4mm'; // 1 inch
+
   return (
-    <div className="bg-white shadow-lg" id="resume-preview">
-      <Template resume={resume} />
+    <div className="flex justify-center items-start p-8 bg-gray-100 min-h-screen">
+      <div 
+        className="bg-white shadow-2xl"
+        id="resume-preview"
+        style={{
+          width: a4Width,
+          minHeight: a4Height,
+          padding: margin,
+          boxSizing: 'border-box',
+        }}
+      >
+        <Template resume={resume} />
+      </div>
     </div>
   );
 }
 
 function ProfessionalTemplate({ resume }: { resume: Resume }) {
   return (
-    <div className="p-12 max-w-4xl mx-auto font-serif">
+    <div className="font-serif" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
       <div className="text-center mb-6 border-b-2 border-gray-800 pb-4">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
           {resume.personalInfo.fullName || 'Your Name'}
@@ -189,7 +207,7 @@ function ProfessionalTemplate({ resume }: { resume: Resume }) {
 
 function ModernTemplate({ resume }: { resume: Resume }) {
   return (
-    <div className="p-12 max-w-4xl mx-auto">
+    <div style={{ fontSize: '11pt', lineHeight: '1.6' }}>
       <div className="mb-6">
         <h1 className="text-5xl font-bold text-blue-600 mb-2">
           {resume.personalInfo.fullName || 'Your Name'}
@@ -342,7 +360,7 @@ function ModernTemplate({ resume }: { resume: Resume }) {
 
 function MinimalTemplate({ resume }: { resume: Resume }) {
   return (
-    <div className="p-12 max-w-4xl mx-auto font-serif">
+    <div className="font-serif" style={{ fontSize: '11pt', lineHeight: '1.6' }}>
       <div className="mb-8">
         <h1 className="text-3xl font-light text-gray-900 mb-1">
           {resume.personalInfo.fullName || 'Your Name'}
