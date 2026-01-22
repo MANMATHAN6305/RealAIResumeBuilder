@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Resume } from '../types/resume';
 
 interface ResumePreviewProps {
@@ -25,6 +25,13 @@ export default function ResumePreview({ resume, templateStyle }: ResumePreviewPr
   // Scale preview on small screens to avoid horizontal scroll
   const baseWidthPx = 793; // ~210mm at 96dpi
   const [scale, setScale] = useState(1);
+  const [pagesHtml, setPagesHtml] = useState<string[]>([]);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  const mmToPx = (mm: number) => mm * 3.7795275591; // 96dpi baseline
+  const a4HeightPx = mmToPx(297);
+  const marginPx = mmToPx(25.4);
+  const contentAreaHeightPx = a4HeightPx - marginPx * 2;
 
   useEffect(() => {
     const updateScale = () => {
@@ -39,21 +46,89 @@ export default function ResumePreview({ resume, templateStyle }: ResumePreviewPr
     return () => window.removeEventListener('resize', updateScale);
   }, []);
 
+  // Build paginated pages by measuring top-level blocks from hidden content
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    // Force reflow to ensure accurate measurements
+    const children = Array.from(el.children) as HTMLElement[];
+    const newPages: string[] = [];
+    let currentPageHtml = '';
+    let currentHeight = 0;
+
+    children.forEach((child) => {
+      const h = child.getBoundingClientRect().height;
+      if (currentHeight + h <= contentAreaHeightPx) {
+        currentPageHtml += child.outerHTML;
+        currentHeight += h;
+      } else {
+        // Commit current page and start new one
+        if (currentPageHtml.trim().length > 0) {
+          newPages.push(currentPageHtml);
+        }
+        currentPageHtml = child.outerHTML;
+        currentHeight = h;
+      }
+    });
+    if (currentPageHtml.trim().length > 0) {
+      newPages.push(currentPageHtml);
+    }
+    setPagesHtml(newPages);
+  }, [resume, templateStyle]);
+
   return (
     <div className="flex justify-center items-start p-4 sm:p-6 md:p-8 bg-gray-100 min-h-screen overflow-x-hidden">
+      {/* Hidden measuring container */}
       <div
-        className="bg-white shadow-2xl"
-        id="resume-preview"
+        ref={contentRef}
+        aria-hidden="true"
         style={{
+          position: 'absolute',
+          left: -9999,
+          top: 0,
           width: a4Width,
           minHeight: a4Height,
           padding: margin,
           boxSizing: 'border-box',
-          transform: `scale(${scale})`,
-          transformOrigin: 'top center',
+          visibility: 'hidden',
         }}
       >
         <Template resume={resume} />
+      </div>
+
+      {/* Visible paginated pages */}
+      <div className="flex flex-col items-center gap-6">
+        {pagesHtml.length === 0 && (
+          <div
+            className="bg-white shadow-2xl border border-gray-200"
+            style={{
+              width: a4Width,
+              minHeight: a4Height,
+              padding: margin,
+              boxSizing: 'border-box',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center',
+            }}
+          >
+            <Template resume={resume} />
+          </div>
+        )}
+
+        {pagesHtml.map((html, idx) => (
+          <div
+            key={idx}
+            className="bg-white shadow-2xl border border-gray-200"
+            style={{
+              width: a4Width,
+              minHeight: a4Height,
+              padding: margin,
+              boxSizing: 'border-box',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center',
+            }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ))}
       </div>
     </div>
   );
