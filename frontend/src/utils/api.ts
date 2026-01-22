@@ -1,19 +1,34 @@
 // API Client for Express Backend
+// Default to port 3001 to match README and backend/index.js logs. Allow override via VITE_API_URL.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 // Get auth token from localStorage
 function getAuthToken(): string | null {
-  return localStorage.getItem('authToken');
+  try {
+    return localStorage.getItem('authToken');
+  } catch (err) {
+    // localStorage could throw in some sandboxed environments
+    console.error('Failed to access localStorage for auth token:', err);
+    return null;
+  }
 }
 
 // Set auth token in localStorage
 export function setAuthToken(token: string): void {
-  localStorage.setItem('authToken', token);
+  try {
+    localStorage.setItem('authToken', token);
+  } catch (err) {
+    console.error('Failed to store auth token:', err);
+  }
 }
 
 // Remove auth token from localStorage
 export function removeAuthToken(): void {
-  localStorage.removeItem('authToken');
+  try {
+    localStorage.removeItem('authToken');
+  } catch (err) {
+    console.error('Failed to remove auth token:', err);
+  }
 }
 
 // Make API request with authentication
@@ -21,52 +36,46 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
-  const headers: HeadersInit = {
+  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
 
+  const token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
-    console.log(`API Request: ${options.method || 'GET'} ${API_BASE_URL}${endpoint}`);
-    console.log('Request body:', options.body);
-    
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const res = await fetch(url, {
       ...options,
       headers,
     });
 
-    console.log('Response status:', response.status, response.statusText);
-
-    if (!response.ok) {
-      let errorMessage = 'Request failed';
-      try {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        errorMessage = errorData.error || errorData.message || `HTTP error! status: ${response.status}`;
-      } catch (e) {
-        console.error('Failed to parse error response:', e);
-        errorMessage = `HTTP error! status: ${response.status}`;
-      }
-      throw new Error(errorMessage);
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      const message = `API request failed: ${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`;
+      const err: any = new Error(message);
+      err.status = res.status;
+      throw err;
     }
 
-    const data = await response.json();
-    console.log('Response data:', data);
-    return data;
+    // Attempt to parse JSON; allow empty body
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return (await res.json()) as T;
+    } else {
+      // If not JSON, return as text (caller may expect JSON, but we guard)
+      const text = await res.text();
+      return text as unknown as T;
+    }
   } catch (error: any) {
-    console.error('API request error:', error);
-    // Handle network errors
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Unable to connect to server. Please check if the backend is running on http://localhost:3001');
-    }
+    // Surface better error for debugging (console + rethrow)
+    console.error(`Request to ${url} failed:`, error);
     throw error;
   }
 }
 
 export default apiRequest;
-
