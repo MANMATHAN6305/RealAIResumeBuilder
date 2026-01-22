@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Resume } from '../types/resume';
 
 interface ResumePreviewProps {
@@ -21,9 +22,26 @@ export default function ResumePreview({ resume, templateStyle }: ResumePreviewPr
   const a4Height = '297mm';
   const margin = '25.4mm'; // 1 inch
 
+  // Scale preview on small screens to avoid horizontal scroll
+  const baseWidthPx = 793; // ~210mm at 96dpi
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const viewportWidth = window.innerWidth;
+      const containerPadding = 32; // p-4 ~ 16px left + right
+      const available = viewportWidth - containerPadding;
+      const next = Math.min(1, available / baseWidthPx);
+      setScale(next);
+    };
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
   return (
-    <div className="flex justify-center items-start p-8 bg-gray-100 min-h-screen">
-      <div 
+    <div className="flex justify-center items-start p-4 sm:p-6 md:p-8 bg-gray-100 min-h-screen overflow-x-hidden">
+      <div
         className="bg-white shadow-2xl"
         id="resume-preview"
         style={{
@@ -31,6 +49,8 @@ export default function ResumePreview({ resume, templateStyle }: ResumePreviewPr
           minHeight: a4Height,
           padding: margin,
           boxSizing: 'border-box',
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
         }}
       >
         <Template resume={resume} />

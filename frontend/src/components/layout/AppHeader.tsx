@@ -26,7 +26,7 @@ export function AppHeader({
   return (
     <header className="sticky top-0 z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="glass-card flex items-center justify-between p-4 sm:p-6 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(37,99,235,0.18)]">
+        <div className="glass-card w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(37,99,235,0.18)]">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 rounded-xl shadow-lg">
               <FileText className="text-white" size={28} />
@@ -37,7 +37,7 @@ export function AppHeader({
             </div>
           </div>
 
-          <div className="flex gap-3 items-center">
+          <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-end w-full sm:w-auto">
             {showAuthActions && (
               <>
                 <div className="text-sm text-gray-600 hidden sm:block">{userEmail}</div>
