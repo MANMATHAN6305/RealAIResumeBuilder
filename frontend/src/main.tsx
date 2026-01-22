@@ -4,8 +4,13 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import App from './App.tsx';
 import './index.css';
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+if (!googleClientId) {
+  throw new Error(
+    'VITE_GOOGLE_CLIENT_ID environment variable is not set. Please configure your Google OAuth client ID.'
+  );
+}
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={googleClientId}>
