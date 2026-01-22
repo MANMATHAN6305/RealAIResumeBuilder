@@ -120,9 +120,10 @@ export async function exportToPDF(resume: Resume, templateStyle: string): Promis
     return;
   }
 
+  const originalOpacity = resumeElement.style.opacity;
+
   try {
     // Show loading indicator
-    const originalOpacity = resumeElement.style.opacity;
     resumeElement.style.opacity = '0.5';
 
     // Capture the element as canvas with high quality
