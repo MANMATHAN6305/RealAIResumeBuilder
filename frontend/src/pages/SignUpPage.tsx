@@ -18,9 +18,9 @@ export function SignUpPage({ onSignUp, onBack }: SignUpPageProps) {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (value: string): boolean => {
+  const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value);
+    return emailRegex.test(email);
   };
 
   const calculateAge = (birthDate: string): number => {
