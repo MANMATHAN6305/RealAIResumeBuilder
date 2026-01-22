@@ -6,7 +6,16 @@ import './index.css';
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-const root = createRoot(document.getElementById('root')!);
+// Safer root retrieval: avoid non-null assertion to prevent runtime throw if 'root' is missing.
+let rootElement = document.getElementById('root');
+if (!rootElement) {
+  // If index.html is missing the root div for some reason, create it to avoid a blank crash.
+  rootElement = document.createElement('div');
+  rootElement.id = 'root';
+  document.body.appendChild(rootElement);
+}
+
+const root = createRoot(rootElement);
 
 // Gracefully handle missing Google OAuth client ID.
 // If not configured, render the app without GoogleOAuthProvider.
