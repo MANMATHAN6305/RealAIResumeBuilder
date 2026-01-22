@@ -20,5 +20,8 @@
     "mysql"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "mysql": "^2.18.1"
+  }
 }
