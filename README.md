@@ -47,7 +47,7 @@ A modern, AI-powered resume builder application with MySQL backend.
    DB_USER=root
    DB_PASSWORD=your_password
    DB_NAME=resume_builder
-   PORT=3001
+   PORT=5000
    JWT_SECRET=your-random-secret-key
    ```
 
@@ -74,7 +74,7 @@ A modern, AI-powered resume builder application with MySQL backend.
 
 3. Create `.env` file:
    ```env
-   VITE_API_URL=http://localhost:3001/api
+   VITE_API_URL=http://localhost:5000/api
    ```
 
 4. Start development server:
@@ -186,6 +186,16 @@ cd frontend
 npm run build
 npm run preview
 ```
+
+## Deploy to GitHub Pages
+
+- Enable GitHub Pages in your repo: Settings → Pages → Source: GitHub Actions.
+- The workflow `.github/workflows/deploy-frontend.yml` builds the frontend and deploys to Pages on pushes to `main`.
+- Optionally set repository Variables for environment values used at build time:
+   - `VITE_API_URL` (e.g., `https://your-backend-host/api`)
+   - `VITE_GOOGLE_CLIENT_ID` (if using Google login)
+
+After the workflow runs, your site will be available at the Pages URL shown in the workflow output.
 
 ## Troubleshooting
 
