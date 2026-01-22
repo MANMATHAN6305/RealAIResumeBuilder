@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Resume, PersonalInfo, Skills } from '../types/resume';
+import { Resume } from '../types/resume';
 import { loadResumeForUser, saveResumeForUser } from '../utils/resumeStorage';
 import { getDemoResume, getEmptyResume } from '../utils/demoResume';
 

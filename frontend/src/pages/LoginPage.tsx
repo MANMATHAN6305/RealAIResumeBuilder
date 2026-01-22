@@ -20,9 +20,9 @@ export function LoginPage({ onLogin, onSignUpClick, onBack, onDemoLogin }: Login
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const validateEmail = (value: string): boolean => {
+  const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(value);
+    return emailRegex.test(email);
   };
 
   const handleSubmit = async (e: FormEvent) => {
