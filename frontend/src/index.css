@@ -35,7 +35,7 @@ body {
   }
 
   .panel-3d {
-    @apply bg-white/70 border border-white/60 rounded-2xl p-6 backdrop-blur-lg transition duration-200 shadow-[0_12px_35px_rgba(15,23,42,0.12)];
+    @apply bg-white/70 border border-white/60 rounded-2xl p-4 sm:p-6 backdrop-blur-lg transition duration-200 shadow-[0_12px_35px_rgba(15,23,42,0.12)];
   }
 
   .panel-3d:hover {
@@ -43,7 +43,7 @@ body {
   }
 
   .btn-3d {
-    @apply relative overflow-hidden rounded-xl font-semibold transition duration-200 text-white px-5 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 shadow-[0_12px_30px_rgba(37,99,235,0.35)];
+    @apply relative overflow-hidden rounded-xl font-semibold transition duration-200 text-white px-4 py-2.5 sm:px-5 sm:py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 shadow-[0_12px_30px_rgba(37,99,235,0.35)];
   }
 
   .btn-3d::after {

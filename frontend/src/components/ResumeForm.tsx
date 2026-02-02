@@ -221,9 +221,9 @@ export default function ResumeForm({ resume, onChange }: ResumeFormProps) {
         {resume.workExperience.map((exp, expIndex) => (
           <div
             key={exp.id}
-            className="mb-6 p-4 rounded-xl border border-slate-200/70 bg-white/70 shadow-[0_10px_25px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
+            className="mb-6 p-4 sm:p-5 rounded-xl border border-slate-200/70 bg-white/70 shadow-[0_10px_25px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(15,23,42,0.12)]"
           >
-            <div className="flex justify-between items-start mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
               <h3 className="font-medium text-gray-700">Experience {expIndex + 1}</h3>
               <button
                 onClick={() => removeWorkExperience(expIndex)}
@@ -254,13 +254,13 @@ export default function ResumeForm({ resume, onChange }: ResumeFormProps) {
                 onChange={(e) => updateWorkExperience(expIndex, 'location', e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   placeholder="Start Date"
                   value={exp.startDate}
                   onChange={(e) => updateWorkExperience(expIndex, 'startDate', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <input
                   type="text"
@@ -268,7 +268,7 @@ export default function ResumeForm({ resume, onChange }: ResumeFormProps) {
                   value={exp.endDate}
                   onChange={(e) => updateWorkExperience(expIndex, 'endDate', e.target.value)}
                   disabled={exp.current}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                 />
               </div>
             </div>
@@ -292,7 +292,7 @@ export default function ResumeForm({ resume, onChange }: ResumeFormProps) {
                 </button>
               </div>
               {exp.achievements.map((achievement, achIndex) => (
-                <div key={achIndex} className="flex gap-2">
+                <div key={achIndex} className="grid grid-cols-[1fr_auto] gap-2 items-center">
                   <input
                     type="text"
                     placeholder="Start with an action verb and include quantifiable results..."

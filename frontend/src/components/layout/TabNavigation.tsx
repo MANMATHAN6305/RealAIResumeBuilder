@@ -11,7 +11,7 @@ export function TabNavigation({ activeTab, onTabChange, templateStyle, onTemplat
   return (
     <div className="mb-6 glass-card p-4 sm:p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(15,23,42,0.15)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => onTabChange('edit')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition shadow ${
